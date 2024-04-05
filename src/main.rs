@@ -88,8 +88,18 @@ async fn copy_request(
         if request_bytes.is_empty() {
             "null".to_string()
         } else {
-            let json_str = std::str::from_utf8(&request_bytes)?;
-            jsonxf::pretty_print(json_str).unwrap_or_else(|_| json_str.to_string())
+            match std::str::from_utf8(&request_bytes) {
+                Ok(json_str) => jsonxf::pretty_print(json_str).unwrap_or_else(|_| json_str.to_string()),
+                Err(_) => {
+                    // Invalid UTF-8 sequence, print the octet stream as hexadecimal bytes
+                    let hex_bytes = request_bytes
+                        .iter()
+                        .map(|byte| format!("{:02X}", byte))
+                        .collect::<Vec<String>>()
+                        .join(" ");
+                    format!("Octet stream:\n{}", hex_bytes)
+                }
+            }
         }
     };
 
@@ -151,12 +161,17 @@ async fn get_response(
             "null".to_string()
         } else {
             match std::str::from_utf8(&response_bytes) {
-                Ok(json_str) => {
-                    jsonxf::pretty_print(json_str).unwrap_or_else(|_| json_str.to_string())
+                Ok(response_str) => {
+                    jsonxf::pretty_print(response_str).unwrap_or_else(|_| response_str.to_string())
                 }
                 Err(_) => {
-                    // utf-8 error
-                    "binary response returned".to_string()
+                    // Invalid UTF-8 sequence, print the octet stream as hexadecimal bytes
+                    let hex_bytes = response_bytes
+                        .iter()
+                        .map(|byte| format!("{:02X}", byte))
+                        .collect::<Vec<String>>()
+                        .join(" ");
+                    format!("Octet stream:\n{}", hex_bytes)
                 }
             }
         }
@@ -388,6 +403,10 @@ async fn handle_request(
                         serde_json::to_string_pretty(&rpc_error)
                             .unwrap_or_else(|_| serde_json::json!(rpc_error).to_string())
                     };
+                    println!(
+                        "{}",
+                        color_treat(error_body.clone(), context.inner.colors.red)
+                    );
                     let source_response = Response::builder()
                         .status(500)
                         .body(Body::from(error_body.clone()))
@@ -396,6 +415,7 @@ async fn handle_request(
                 }
             }
         };
+
     let response_headers = copy_headers(source_response.headers());
 
     match suppress_log(
