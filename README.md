@@ -1,5 +1,31 @@
 # json_rpc_snoop
 
+> [!WARNING]
+> **This repository is deprecated and will be archived.** Use [ethpandaops/rpc-snooper](https://github.com/ethpandaops/rpc-snooper) instead.
+> It is actively maintained and supports JSON-RPC as well as the REST+SSZ Engine API over HTTP/2 (h2c), Engine API JWT auth, a flow-control API, Prometheus metrics and Xatu publishing.
+
+## Migrating to rpc-snooper
+
+| json_rpc_snoop | rpc-snooper |
+| - | - |
+| `ethpandaops/json-rpc-snoop` image | `ethpandaops/rpc-snooper` image |
+| `./json_rpc_snoop [OPTIONS] <RPC_ENDPOINT>` | `snooper [options] <target>` |
+| `-b, --bind-address` | `-b, --bind-address` |
+| `-p, --port` | `-p, --port` |
+| `-n, --no-color` | `--no-color` |
+| `-s, --suppress-method`, `-S, --suppress-path` | no per-method/path filter; `--hide-bodies` hides all bodies, `--truncate` shortens large hex values |
+| `--drop-request-rate`, `--drop-response-rate` | no equivalent |
+
+```
+docker run --rm -p 8560:8560 ethpandaops/rpc-snooper ./snooper -b 0.0.0.0 -p 8560 http://localhost:8545
+```
+
+See the [rpc-snooper README](https://github.com/ethpandaops/rpc-snooper#readme) for the full option list and API reference.
+
+---
+
+## Legacy documentation
+
 ### How to build
 Ensure you have cargo installed and in your PATH (the easiest way is to visit [https://rustup.rs/](https://rustup.rs/))
 ```
